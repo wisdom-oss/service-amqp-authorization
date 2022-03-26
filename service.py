@@ -5,7 +5,6 @@ import sys
 import typing
 
 import pydantic.error_wrappers
-from pipfile import Pipfile
 import amqp_rpc_server
 
 import settings
@@ -20,8 +19,6 @@ if __name__ == '__main__':
         level=_service_settings.log_level.upper()
     )
     logging.info('Starting the "%s" service', _service_settings.name)
-    # Get the current event loop
-    _loop = asyncio.get_event_loop()
     # = Read the AMQP Settings and check the server connection =
     try:
         _amqp_settings = settings.AMQPSettings()
@@ -33,9 +30,9 @@ if __name__ == '__main__':
     logging.debug('Successfully read the settings for the message broker connection:\n%s',
                   _amqp_settings.json(indent=2, by_alias=True))
     # Set the port if it is None
-    _amqp_settings.dsn.port = 5762 if _amqp_settings.dsn.port is None else _amqp_settings.dsn.port
+    _amqp_settings.dsn.port = 5672 if _amqp_settings.dsn.port is None else _amqp_settings.dsn.port
     # Check the connectivity to the message broker
-    _message_broker_available = _loop.run_until_complete(
+    _message_broker_available = asyncio.run(
         tools.is_host_available(
             host=_amqp_settings.dsn.host,
             port=_amqp_settings.dsn.port
