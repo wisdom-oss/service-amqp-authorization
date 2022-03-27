@@ -19,29 +19,29 @@ class Scope(Base):
     """The name of the database"""
     
     id = sqlalchemy.Column(
+        sqlalchemy.Integer,
         name='scope_id',
-        type=sqlalchemy.Integer,
         primary_key=True,
         autoincrement=True
     )
     """The internal id of the scope"""
     
     name = sqlalchemy.Column(
+        sqlalchemy.String(length=255),
         name='scope_name',
-        type=sqlalchemy.String(length=255),
         unique=True
     )
     """The name of the scope"""
     
     description = sqlalchemy.Column(
-        name='scope_description',
-        type=sqlalchemy.Text
+        sqlalchemy.Text,
+        name='scope_description'
     )
     """The textual description of the scope"""
     
     oauth2_value = sqlalchemy.Column(
+        sqlalchemy.String(length=255),
         name='scope_value',
-        type=sqlalchemy.String(length=255),
         unique=True
     )
     """The string identifying the scope in a OAuth2 scope string"""
@@ -54,37 +54,37 @@ class AccessToken(Base):
     """The name of the database"""
     
     id = sqlalchemy.Column(
+        sqlalchemy.Integer,
         name='token_id',
-        type=sqlalchemy.Integer,
         primary_key=True,
         autoincrement=True
     )
     """The internal id of the access token"""
     
     value = sqlalchemy.Column(
+        sqlalchemy.String(length=36),
         name='token',
-        type=sqlalchemy.String(length=36),
         unique=True
     )
     """The token which has been issued to the user"""
     
     is_active = sqlalchemy.Column(
+        sqlalchemy.Boolean,
         name='active',
-        type=sqlalchemy.Boolean,
         default=True
     )
     """The status of the token"""
     
     expires_at = sqlalchemy.Column(
+        sqlalchemy.Integer,
         name='expires',
-        type=sqlalchemy.Integer,
         nullable=False
     )
     """The UNIX timestamp indicating the expiration time and date of the token"""
     
     created_at = sqlalchemy.Column(
+        sqlalchemy.Integer,
         name='created',
-        type=sqlalchemy.Integer,
         nullable=False
     )
     """The UNIX timestamp indicating the creation time and date of the token"""
@@ -100,20 +100,20 @@ class TokenScopes(Base):
     """The name of the mapping table"""
     
     mapping_id = sqlalchemy.Column(
-        type=sqlalchemy.Integer,
+        sqlalchemy.Integer,
         primary_key=True,
         autoincrement=True
     )
     """The internal id of the mapping"""
     
     token_id = sqlalchemy.Column(
+        sqlalchemy.Integer,
         sqlalchemy.ForeignKey('access_tokens.token_id', **FOREIGN_KEY_OPTIONS),
-        type=sqlalchemy.Integer
     )
     """The id of the token which is the associated to the scope"""
     
     scope_id = sqlalchemy.Column(
+        sqlalchemy.Integer,
         sqlalchemy.ForeignKey('scopes.scope_id', **FOREIGN_KEY_OPTIONS),
-        type=sqlalchemy.Integer
     )
     """The id of the scope which is associated to the token"""

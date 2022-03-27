@@ -4,11 +4,11 @@ import typing
 
 import sqlalchemy.orm
 
-import tables
+import database.tables
 
 DatabaseObject = typing.TypeVar(
     'DatabaseObject',
-    tables.Scope, tables.TokenScopes, tables.AccessToken
+    database.tables.Scope, database.tables.TokenScopes, database.tables.AccessToken
 )
 
 
@@ -29,7 +29,7 @@ def _add_object_to_database(obj: DatabaseObject, session: sqlalchemy.orm.Session
     return obj
 
 
-def get_access_token(token: str, session: sqlalchemy.orm.Session) -> tables.AccessToken:
+def get_access_token(token: str, session: sqlalchemy.orm.Session) -> database.tables.AccessToken:
     """
     Get the database entry of the specified token
     
@@ -41,7 +41,8 @@ def get_access_token(token: str, session: sqlalchemy.orm.Session) -> tables.Acce
     :rtype: tables.AccessToken
     :raises ValueError: The specified token could not be found
     """
-    _db_token = session.query(tables.AccessToken).filter(tables.AccessToken.value == token).first()
+    _db_token = session.query(
+        database.tables.AccessToken).filter(database.tables.AccessToken.value == token).first()
     if _db_token is None:
         raise ValueError('The token was not found in the database')
     return _db_token
