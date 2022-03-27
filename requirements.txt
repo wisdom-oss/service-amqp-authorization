@@ -1,3 +1,5 @@
-amqp-rpc-server~=1.0.0
+amqp-rpc-server==1.1.0
 pydantic[dotenv]~=1.9.0
 pika
+SQLAlchemy~=1.4.32
+pymysql

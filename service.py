@@ -1,7 +1,12 @@
 """AMQP Authorization Service"""
 import asyncio
 import logging
+import os
+import signal
 import sys
+import threading
+import time
+import typing
 
 import amqp_rpc_server
 import pydantic.error_wrappers
@@ -10,6 +15,17 @@ import server_functions
 import settings
 import tools
 
+_stop_event = threading.Event()
+_stop_event.clear()
+
+amqp_server: typing.Optional[amqp_rpc_server.Server] = None
+
+
+def signal_handler(sign, frame):
+    logging.info('Received shutdown signal. Stopping the AMQP server')
+    _stop_event.set()
+
+
 if __name__ == '__main__':
     # Read the service settings and configure the logging
     _service_settings = settings.ServiceSettings()
@@ -17,7 +33,7 @@ if __name__ == '__main__':
         format=_service_settings.log_format,
         level=_service_settings.log_level.upper()
     )
-    logging.info('Starting the "%s" service', _service_settings.name)
+    logging.info('Starting the "%s" service as PID: %s', _service_settings.name, os.getpid())
     # = Read the AMQP Settings and check the server connection =
     try:
         _amqp_settings = settings.AMQPSettings()
@@ -69,8 +85,22 @@ if __name__ == '__main__':
         amqp_dsn=_amqp_settings.dsn,
         exchange_name=_amqp_settings.exchange_name,
         content_validator=server_functions.content_validator,
-        executor=server_functions.executor
+        executor=server_functions.executor,
+        max_reconnection_attempts=1
     )
+    # Attach the signal handler
+    signal.signal(signal.SIGTERM, signal_handler)
     # Start the server
-    amqp_server.start_server()
-    # TODO: Loop via events until shutdown signal is received
+    try:
+        amqp_server.start_server()
+    except amqp_rpc_server.exceptions.MaxConnectionAttemptsReached:
+        _stop_event.set()
+        sys.exit(1)
+    while not _stop_event.is_set():
+        try:
+            time.sleep(0.1)
+        except KeyboardInterrupt:
+            logging.info('Detected a KeyboardInterrupt. Stopping the AMQP server')
+            _stop_event.set()
+    amqp_server.stop_server()
+    logging.info('Stopped the AMQP Server. Exiting the service')
