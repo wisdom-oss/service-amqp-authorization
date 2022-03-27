@@ -46,7 +46,7 @@ class ServiceSettings(pydantic.BaseSettings):
     class Config:
         """Configuration of the service settings"""
     
-        env_file = '.application.env'
+        env_file = 'env\\.application.env'
         """Allow loading the values for the service settings from the specified file"""
 
 
@@ -108,5 +108,32 @@ class AMQPSettings(pydantic.BaseSettings):
     class Config:
         """Configuration of the service settings"""
     
-        env_file = '.amqp.env'
+        env_file = 'env\\.amqp.env'
+        """Allow loading the values for the service settings from the specified file"""
+
+
+class DatabaseSettings(pydantic.BaseSettings):
+    """Settings for the connection to the database"""
+    
+    dsn: pydantic.stricturl(
+        tld_required=False, allowed_schemes={"mysql+pymysql", "mariadb+pymysql"}
+    ) = pydantic.Field(
+        default=None,
+        title='Database Data Source Name',
+        description='The data source name specifying the connection parameters to the database '
+                    'containing the authorization service data',
+        alias='DATABASE_DSN',
+        env='DATABASE_DSN'
+    )
+    """
+    Database Data Source Name
+    
+    The data source name specifying the connection parameters to the database containing the
+    authorization service data
+    """
+
+    class Config:
+        """Configuration of the service settings"""
+    
+        env_file = 'env\\.database.env'
         """Allow loading the values for the service settings from the specified file"""
