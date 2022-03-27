@@ -91,16 +91,15 @@ if __name__ == '__main__':
     # Attach the signal handler
     signal.signal(signal.SIGTERM, signal_handler)
     # Start the server
-    try:
-        amqp_server.start_server()
-    except amqp_rpc_server.exceptions.MaxConnectionAttemptsReached:
-        _stop_event.set()
-        sys.exit(1)
+    amqp_server.start_server()
     while not _stop_event.is_set():
         try:
+            amqp_server.raise_exceptions()
             time.sleep(0.1)
         except KeyboardInterrupt:
             logging.info('Detected a KeyboardInterrupt. Stopping the AMQP server')
             _stop_event.set()
+        except amqp_rpc_server.exceptions.MaxConnectionAttemptsReached:
+            sys.exit(1)
     amqp_server.stop_server()
     logging.info('Stopped the AMQP Server. Exiting the service')

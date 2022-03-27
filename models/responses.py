@@ -4,7 +4,7 @@ import typing
 import pydantic
 
 import enums
-import models
+import models.incoming
 
 
 class TokenIntrospectionResult(models.BaseModel):
@@ -83,3 +83,15 @@ class TokenIntrospectionResult(models.BaseModel):
     
     The reason why the token introspection has failed
     """
+
+
+class ScopeAddedResponse(models.incoming.CreateScopeRequest):
+    
+    id: int = pydantic.Field(
+        default=...,
+        alias='scope_id'
+    )
+    """The internal ID of the scope"""
+    
+    class Config:
+        orm_mode = True

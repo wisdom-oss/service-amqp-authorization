@@ -12,7 +12,7 @@ DatabaseObject = typing.TypeVar(
 )
 
 
-def _add_object_to_database(obj: DatabaseObject, session: sqlalchemy.orm.Session) -> DatabaseObject:
+def add_object_to_database(obj: DatabaseObject, session: sqlalchemy.orm.Session) -> DatabaseObject:
     """
     Add the specified object to the database
     
