@@ -1,5 +1,4 @@
-amqp-rpc-server==1.1.1
+amqp-rpc-server~=1.1.2
 pydantic[dotenv]~=1.9.0
-pika
-SQLAlchemy~=1.4.32
-pymysql
+SQLAlchemy~=1.4.36
+psycopg2-binary
