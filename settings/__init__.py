@@ -5,14 +5,14 @@ import pydantic
 from pydantic import BaseSettings, AmqpDsn, stricturl, Field
 
 
-class ServiceSettings(BaseSettings):
+class ServiceConfiguration(BaseSettings):
     """Settings related to the general service execution"""
 
     name: str = Field(
-        default="authorization-service",
+        default="amqp-authorization-service",
         title="Service Name",
         description="The name of the service which is used for registering at the service "
-                    "registry and for identifying this service in amqp responses",
+        "registry and for identifying this service in amqp responses",
         env="CONFIG_SERVICE_NAME",
     )
     """
@@ -59,7 +59,7 @@ class AMQPConfiguration(pydantic.BaseSettings):
         default="authorization-service",
         title="AMQP Send Exchange",
         description="The exchange to which this service will send messages",
-        env="CONFIG_AMQP_EXCHANGE",
+        env="CONFIG_AMQP_BIND_EXCHANGE",
         alias="CONFIG_AMQP_BIND_EXCHANGE",
     )
     """
@@ -75,7 +75,7 @@ class AMQPConfiguration(pydantic.BaseSettings):
         """The file from which the settings may be read"""
 
 
-class DatabaseSettings(BaseSettings):
+class DatabaseConfiguration(BaseSettings):
     """Settings related to the connections to the geo-data server"""
 
     dsn: pydantic.PostgresDsn = Field(

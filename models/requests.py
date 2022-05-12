@@ -1,49 +1,42 @@
 import typing
 import pydantic
 
+import enums
+import models
 from models import BaseModel as __BaseModel
 
 
-class AccountUpdateInformation(__BaseModel):
-    first_name: typing.Optional[str] = pydantic.Field(default=None, alias="firstName")
-    """The first name of the user who is the owner of the account"""
+class TokenValidationData(__BaseModel):
+    action: typing.Literal[enums.Action.CHECK_TOKEN_SCOPE]
 
-    last_name: typing.Optional[str] = pydantic.Field(default=None, alias="lastName")
-    """The last name of the user who is the owner of the account"""
+    token: str = pydantic.Field(default=...)
+    """The token that shall be validated"""
 
-    username: typing.Optional[str] = pydantic.Field(default=None)
-    """The username of the account"""
+    scopes: typing.Optional[typing.Union[list[str], str, None]] = pydantic.Field(default=None)
+    """The scopes which the token needs to pass the validation"""
 
-    keep_old_scopes: typing.Optional[bool] = pydantic.Field(default=True, alias="keepScopes")
-    """Indicator for keeping the current scopes of the user"""
+    @pydantic.validator("scopes")
+    def convert_scope_string_to_list(cls, v):
+        print(type(v))
+        if type(v) is list:
+            return v
+        elif type(v) is str:
+            return v.split()
+        elif v is None:
+            return v
+        else:
+            raise TypeError("The scope parameter only accepts lists or strings")
 
-    scopes: typing.Optional[list[typing.Union[str, int]]] = pydantic.Field(
-        default=None, alias="scopes"
-    )
-    """The new scopes if the current shall be replaced"""
 
-    password: typing.Optional[pydantic.SecretStr] = pydantic.Field(default=None, alias="password")
-    """The new password for this account"""
+class ScopeCheckData(__BaseModel):
+    action: typing.Literal[enums.Action.CHECK_SCOPE]
 
-
-class AccountCreationInformation(__BaseModel):
-    first_name: str = pydantic.Field(default=..., alias="firstName")
-    """The first name of the user who is the owner of the account"""
-
-    last_name: str = pydantic.Field(default=..., alias="lastName")
-    """The last name of the user who is the owner of the account"""
-
-    username: str = pydantic.Field(default=...)
-    """The username of the account"""
-
-    scopes: list[typing.Union[str, int]] = pydantic.Field(default=..., alias="scopes")
-    """The new scopes if the current shall be replaced"""
-
-    password: pydantic.SecretStr = pydantic.Field(default=..., alias="password")
-    """The new password for this account"""
+    scope_identifier: typing.Union[str, int] = pydantic.Field(default=...)
 
 
 class ScopeUpdateData(__BaseModel):
+    action: typing.Literal[enums.Action.EDIT_SCOPE]
+
     name: typing.Optional[str] = pydantic.Field(default=...)
     """The name of the scope"""
 
@@ -52,6 +45,8 @@ class ScopeUpdateData(__BaseModel):
 
 
 class ScopeCreationData(__BaseModel):
+    action: typing.Literal[enums.Action.ADD_SCOPE]
+
     name: str = pydantic.Field(default=...)
     """The name of the scope"""
 
@@ -60,3 +55,7 @@ class ScopeCreationData(__BaseModel):
 
     scope_string_value: str = pydantic.Field(default=...)
     """The value by which the scope is identifiable in a scope string"""
+
+
+class IncomingRequest(__BaseModel):
+    payload: typing.Union[TokenValidationData, ScopeCreationData, ScopeUpdateData, ScopeCheckData]

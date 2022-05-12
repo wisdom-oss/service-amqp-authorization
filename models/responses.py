@@ -2,30 +2,9 @@ import typing
 
 import pydantic
 
+import enums
 import models.common
 from models import BaseModel
-
-
-class TokenIntrospection(BaseModel):
-
-    active: bool = pydantic.Field(default=...)
-
-    scope: typing.Optional[typing.Union[str, list[str]]] = pydantic.Field(default=None)
-
-    token_type: typing.Optional[str] = pydantic.Field(default=None)
-
-    expires_at: typing.Optional[int] = pydantic.Field(default=None, alias="exp")
-
-    created_at: typing.Optional[int] = pydantic.Field(default=None, alias="iat")
-
-    @pydantic.validator("scope")
-    def convert_scope_list_to_string(cls, v):
-        if type(v) is list:
-            return " ".join(v)
-        elif type(v) is str:
-            return v
-        else:
-            raise TypeError("The scope parameter only accepts lists or strings")
 
 
 class UserAccount(BaseModel):
@@ -41,4 +20,30 @@ class UserAccount(BaseModel):
     username: str = pydantic.Field(default=..., title="Username")
     """The username of the account"""
 
-    scopes: list[models.common.Scope] = pydantic.Field(default=..., title="User Scopes")
+
+class TokenIntrospection(BaseModel):
+
+    active: bool = pydantic.Field(default=...)
+
+    reason: typing.Optional[enums.TokenIntrospectionFailure] = pydantic.Field(default=None)
+
+    scope: typing.Optional[typing.Union[str, list[str]]] = pydantic.Field(default=None)
+
+    token_type: typing.Optional[str] = pydantic.Field(default=None)
+
+    expires_at: typing.Optional[int] = pydantic.Field(default=None, alias="exp")
+
+    created_at: typing.Optional[int] = pydantic.Field(default=None, alias="iat")
+
+    user: typing.Optional[UserAccount] = pydantic.Field(default=None, alias="user")
+
+    @pydantic.validator("scope")
+    def convert_scope_list_to_string(cls, v):
+        if type(v) is list:
+            return " ".join(v)
+        elif type(v) is str:
+            return v
+        elif v is None:
+            return v
+        else:
+            raise TypeError("The scope parameter only accepts lists or strings")
