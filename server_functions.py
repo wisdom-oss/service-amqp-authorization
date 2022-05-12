@@ -87,7 +87,7 @@ def executor(message: bytes) -> bytes:
         content = {
             "httpCode": exception.http_code.value,
             "httpError": exception.http_code.phrase,
-            "error": settings.ServiceSettings().name + f".{exception.error_code}",
+            "error": settings.ServiceConfiguration().name + f".{exception.error_code}",
             "errorName": exception.error_name,
             "errorDescription": exception.error_description,
         }
@@ -96,8 +96,17 @@ def executor(message: bytes) -> bytes:
         content = {
             "httpCode": http.HTTPStatus.CONFLICT.value,
             "httpError": http.HTTPStatus.CONFLICT.phrase,
-            "error": settings.ServiceSettings().name + f".DUPLICATE_ENTRY",
+            "error": settings.ServiceConfiguration().name + f".DUPLICATE_ENTRY",
             "errorName": "Constraint Violation",
             "errorDescription": "The resource you are trying to create already exists",
+        }
+        return ujson.dumps(content).encode("utf-8")
+    except Exception as e:
+        content = {
+            "httpCode": http.HTTPStatus.INTERNAL_SERVER_ERROR.value,
+            "httpError": http.HTTPStatus.INTERNAL_SERVER_ERROR.phrase,
+            "error": settings.ServiceConfiguration().name + f".INTERNAL_ERROR",
+            "errorName": "Internal Service Error",
+            "errorDescription": "The service encountered an internal error",
         }
         return ujson.dumps(content).encode("utf-8")
