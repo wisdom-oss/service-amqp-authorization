@@ -17,7 +17,6 @@ class TokenValidationData(__BaseModel):
 
     @pydantic.validator("scopes")
     def convert_scope_string_to_list(cls, v):
-        print(type(v))
         if type(v) is list:
             return v
         elif type(v) is str:
