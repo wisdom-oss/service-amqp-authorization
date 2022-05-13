@@ -54,6 +54,16 @@ def executor(message: bytes) -> bytes:
         elif payload_type == models.requests.ScopeCreationData:
             # Create a new database entry
             database.crud.store_new_scope(request.payload)
+            scope = database.crud.get_scope(request.payload.scope_string_value)
+            if scope is None:
+                raise exceptions.ServiceException(
+                    error_code="SCOPE_NOT_CREATED",
+                    error_name="Scope not created",
+                    error_description="The requested scope was not created",
+                    status_code=http.HTTPStatus.INTERNAL_SERVER_ERROR,
+                )
+            else:
+                return ujson.dumps(scope.dict()).encode("utf-8")
         elif payload_type == models.requests.ScopeCheckData:
             # Try to get a scope from the database
             scope = database.crud.get_scope(request.payload.scope_identifier)
