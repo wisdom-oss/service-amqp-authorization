@@ -78,6 +78,14 @@ def executor(message: bytes) -> bytes:
                 return ujson.dumps(scope.dict()).encode("utf-8")
         elif payload_type == models.requests.ScopeUpdateData:
             # Try to get a scope from the database
+            if request.payload.scope_identifier in ["administrator", "me"]:
+                raise exceptions.ServiceException(
+                    error_code="SCOPE_NOT_MODIFIABLE",
+                    error_name="Scope not modifiable",
+                    error_description="The requested scope may not be changed since the scope is a core scope used by "
+                    "the authorization service",
+                    status_code=http.HTTPStatus.FORBIDDEN,
+                )
             scope = database.crud.get_scope(request.payload.scope_identifier)
             if scope is None:
                 raise exceptions.ServiceException(
