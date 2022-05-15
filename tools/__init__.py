@@ -2,6 +2,7 @@
 import asyncio
 import datetime
 import logging
+import tzlocal
 
 import database
 import database.crud
@@ -59,11 +60,11 @@ def run_token_introspection(
         return models.responses.TokenIntrospection(
             active=False, reason=enums.TokenIntrospectionFailure.INVALID_TOKEN
         )
-    if datetime.datetime.now() > access_token_information.expires:
+    if datetime.datetime.now(tz=tzlocal.get_localzone()) > access_token_information.expires:
         return models.responses.TokenIntrospection(
             active=False, reason=enums.TokenIntrospectionFailure.EXPIRED
         )
-    if datetime.datetime.now() < access_token_information.created:
+    if datetime.datetime.now(tz=tzlocal.get_localzone()) < access_token_information.created:
         return models.responses.TokenIntrospection(
             active=False, reason=enums.TokenIntrospectionFailure.TOKEN_USED_TOO_EARLY
         )
@@ -82,6 +83,15 @@ def run_token_introspection(
     if request.scopes is not None:
         required_scopes = set(sorted(request.scopes))
         available_scopes = set(sorted([scope.scope_string_value for scope in access_token_scopes]))
+        if "administration" in available_scopes:
+            return models.responses.TokenIntrospection(
+                active=True,
+                scope=request.scopes,
+                token_type="access_token",
+                expires_at=access_token_information.expires.timestamp(),
+                created_at=access_token_information.created.timestamp(),
+                user=user,
+            )
         if not required_scopes.issubset(available_scopes):
             return models.responses.TokenIntrospection(
                 active=False, reason=enums.TokenIntrospectionFailure.MISSING_PRIVILEGES

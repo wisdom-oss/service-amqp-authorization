@@ -4,3 +4,4 @@ SQLAlchemy~=1.4.36
 psycopg2-binary
 ujson~=5.2.0
 python-dotenv~=0.20.0
+tzlocal

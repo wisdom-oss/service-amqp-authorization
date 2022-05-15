@@ -120,11 +120,12 @@ def executor(message: bytes) -> bytes:
         }
         return ujson.dumps(content).encode("utf-8")
     except Exception as e:
+        print(e)
         content = {
             "httpCode": http.HTTPStatus.INTERNAL_SERVER_ERROR.value,
             "httpError": http.HTTPStatus.INTERNAL_SERVER_ERROR.phrase,
             "error": settings.ServiceConfiguration().name + f".INTERNAL_ERROR",
             "errorName": "Internal Service Error",
-            "errorDescription": "The service encountered an internal error",
+            "errorDescription": "The service encountered an internal error: " + str(e),
         }
         return ujson.dumps(content).encode("utf-8")
