@@ -1,119 +1,103 @@
-"""Object Relational Mapping classes and objects"""
-import sqlalchemy.ext.declarative
-import sqlalchemy.orm
+import sqlalchemy
 
-Base = sqlalchemy.ext.declarative.declarative_base()
-"""The base class for all ORM classes"""
+import database
 
-FOREIGN_KEY_OPTIONS = {
-    "onupdate": "CASCASE",
-    "ondelete": "CASCADE"
-}
-"""Default options for all foreign key relationships"""
+__metadata = sqlalchemy.MetaData(schema="authorization")
+
+__fk_options = {"onupdate": "CASCADE", "ondelete": "CASCADE"}
+
+roles = sqlalchemy.Table(
+    "roles",
+    __metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, autoincrement=True),
+    sqlalchemy.Column("name", sqlalchemy.String(length=255), unique=True),
+    sqlalchemy.Column("description", sqlalchemy.Text),
+)
+
+scopes = sqlalchemy.Table(
+    "scopes",
+    __metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, autoincrement=True),
+    sqlalchemy.Column("name", sqlalchemy.Text, unique=True),
+    sqlalchemy.Column("description", sqlalchemy.Text),
+    sqlalchemy.Column("value", sqlalchemy.String(length=255), unique=True),
+)
+
+access_token = sqlalchemy.Table(
+    "accessTokens",
+    __metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, autoincrement=True),
+    sqlalchemy.Column("value", sqlalchemy.String(length=56)),
+    sqlalchemy.Column("active", sqlalchemy.Boolean, default=True),
+    sqlalchemy.Column("expires", sqlalchemy.TIMESTAMP(timezone=True)),
+    sqlalchemy.Column("created", sqlalchemy.TIMESTAMP(timezone=True)),
+    sqlalchemy.Column("accountID", None, sqlalchemy.ForeignKey("accounts.id", **__fk_options)),
+)
+
+refresh_token = sqlalchemy.Table(
+    "refreshTokens",
+    __metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, autoincrement=True),
+    sqlalchemy.Column("value", sqlalchemy.String(length=56)),
+    sqlalchemy.Column("active", sqlalchemy.Boolean, default=True),
+    sqlalchemy.Column("expires", sqlalchemy.TIMESTAMP(timezone=True)),
+    sqlalchemy.Column("accountID", None, sqlalchemy.ForeignKey("accounts.id", **__fk_options)),
+)
+
+accounts = sqlalchemy.Table(
+    "accounts",
+    __metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, autoincrement=True),
+    sqlalchemy.Column("firstName", sqlalchemy.String(length=255), nullable=False),
+    sqlalchemy.Column("lastName", sqlalchemy.String(length=255), nullable=False),
+    sqlalchemy.Column("username", sqlalchemy.String(length=255), nullable=False, unique=True),
+    sqlalchemy.Column("password", sqlalchemy.Text, nullable=False),
+    sqlalchemy.Column("active", sqlalchemy.Boolean, default=True, nullable=False),
+)
+
+role_scopes = sqlalchemy.Table(
+    "roleScopes",
+    __metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, autoincrement=True),
+    sqlalchemy.Column("roleID", None, sqlalchemy.ForeignKey("roles.id", **__fk_options)),
+    sqlalchemy.Column("scopeID", None, sqlalchemy.ForeignKey("scopes.id", **__fk_options)),
+)
+
+access_token_scopes = sqlalchemy.Table(
+    "accessTokenScopes",
+    __metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, autoincrement=True),
+    sqlalchemy.Column("tokenID", None, sqlalchemy.ForeignKey("accessTokens.id", **__fk_options)),
+    sqlalchemy.Column("scopeID", None, sqlalchemy.ForeignKey("scopes.id", **__fk_options)),
+)
+
+refresh_token_scopes = sqlalchemy.Table(
+    "refreshTokenScopes",
+    __metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, autoincrement=True),
+    sqlalchemy.Column("tokenID", None, sqlalchemy.ForeignKey("accessTokens.id", **__fk_options)),
+    sqlalchemy.Column("scopeID", None, sqlalchemy.ForeignKey("scopes.id", **__fk_options)),
+)
+
+account_scopes = sqlalchemy.Table(
+    "accountScopes",
+    __metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, autoincrement=True),
+    sqlalchemy.Column("accountID", None, sqlalchemy.ForeignKey("accounts.id", **__fk_options)),
+    sqlalchemy.Column("scopeID", None, sqlalchemy.ForeignKey("scopes.id", **__fk_options)),
+)
+
+account_roles = sqlalchemy.Table(
+    "accountRoles",
+    __metadata,
+    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True, autoincrement=True),
+    sqlalchemy.Column("accountID", None, sqlalchemy.ForeignKey("accounts.id", **__fk_options)),
+    sqlalchemy.Column("scopeID", None, sqlalchemy.ForeignKey("roles.id", **__fk_options)),
+)
 
 
-class Scope(Base):
-    """A scope present in the database"""
-    
-    __tablename__ = "scopes"
-    """The name of the database"""
-    
-    id = sqlalchemy.Column(
-        sqlalchemy.Integer,
-        name='scope_id',
-        primary_key=True,
-        autoincrement=True
-    )
-    """The internal id of the scope"""
-    
-    name = sqlalchemy.Column(
-        sqlalchemy.String(length=255),
-        name='scope_name',
-        unique=True
-    )
-    """The name of the scope"""
-    
-    description = sqlalchemy.Column(
-        sqlalchemy.Text,
-        name='scope_description'
-    )
-    """The textual description of the scope"""
-    
-    oauth2_value = sqlalchemy.Column(
-        sqlalchemy.String(length=255),
-        name='scope_value',
-        unique=True
-    )
-    """The string identifying the scope in a OAuth2 scope string"""
-    
-    
-class AccessToken(Base):
-    """An access token which has been issued to a user"""
-    
-    __tablename__ = "access_tokens"
-    """The name of the database"""
-    
-    id = sqlalchemy.Column(
-        sqlalchemy.Integer,
-        name='token_id',
-        primary_key=True,
-        autoincrement=True
-    )
-    """The internal id of the access token"""
-    
-    value = sqlalchemy.Column(
-        sqlalchemy.String(length=36),
-        name='token',
-        unique=True
-    )
-    """The token which has been issued to the user"""
-    
-    is_active = sqlalchemy.Column(
-        sqlalchemy.Boolean,
-        name='active',
-        default=True
-    )
-    """The status of the token"""
-    
-    expires_at = sqlalchemy.Column(
-        sqlalchemy.Integer,
-        name='expires',
-        nullable=False
-    )
-    """The UNIX timestamp indicating the expiration time and date of the token"""
-    
-    created_at = sqlalchemy.Column(
-        sqlalchemy.Integer,
-        name='created',
-        nullable=False
-    )
-    """The UNIX timestamp indicating the creation time and date of the token"""
-    
-    scopes = sqlalchemy.orm.relationship("Scope", secondary='token_scopes')
-    """The scopes assigned to the token during the creation"""
-    
-
-class TokenScopes(Base):
-    """The mapping table which assigns the scopes to the access tokens"""
-    
-    __tablename__ = "token_scopes"
-    """The name of the mapping table"""
-    
-    mapping_id = sqlalchemy.Column(
-        sqlalchemy.Integer,
-        primary_key=True,
-        autoincrement=True
-    )
-    """The internal id of the mapping"""
-    
-    token_id = sqlalchemy.Column(
-        sqlalchemy.Integer,
-        sqlalchemy.ForeignKey('access_tokens.token_id', **FOREIGN_KEY_OPTIONS),
-    )
-    """The id of the token which is the associated to the scope"""
-    
-    scope_id = sqlalchemy.Column(
-        sqlalchemy.Integer,
-        sqlalchemy.ForeignKey('scopes.scope_id', **FOREIGN_KEY_OPTIONS),
-    )
-    """The id of the scope which is associated to the token"""
+def initialize() -> None:
+    """
+    Initialize the tables used by the service
+    """
+    __metadata.create_all(bind=database.engine)

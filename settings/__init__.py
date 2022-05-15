@@ -1,139 +1,98 @@
-"""Settings for the service"""
-import pika.exchange_type
+"""Module containing all settings which are used in the application"""
+import typing
+
 import pydantic
+from pydantic import BaseSettings, AmqpDsn, stricturl, Field
 
 
-class ServiceSettings(pydantic.BaseSettings):
-    """Settings for the general execution of this service"""
-    
-    name: str = pydantic.Field(
-        default='amqp-authorization-service',
-        title='Application Name',
-        description='The name of the service which will be used when registering the service at '
-                    'the service registry',
-        env='SERVICE_NAME'
+class ServiceConfiguration(BaseSettings):
+    """Settings related to the general service execution"""
+
+    name: str = Field(
+        default="amqp-authorization-service",
+        title="Service Name",
+        description="The name of the service which is used for registering at the service "
+        "registry and for identifying this service in amqp responses",
+        env="CONFIG_SERVICE_NAME",
     )
     """
     Application Name
     
-    The name of the microservice which is used for registering at the service registry
+    The name of the service which is used for registering at the service registry and for
+    identifying this service in amqp responses
     """
 
-    log_level: str = pydantic.Field(
-        default='INFO',
-        title='Logging Level',
-        description='The level of logging which the root logger will use',
-        env='SERVICE_LOG_LEVEL'
+    log_level: str = Field(
+        default="INFO",
+        title="Logging Level",
+        description="The level of logging which the root logger will use",
+        env="CONFIG_LOGGING_LEVEL",
     )
     """
     Logging Level
-
+    
     The level of logging which will be used by the root logger
     """
 
-    log_format: str = pydantic.Field(
-        default='%(levelname)-8s | %(asctime)s | %(name)s | %(message)s',
-        title='Logging Format',
-        description='The format of logging which the root logger will use',
-        env='SERVICE_LOG_FORMAT'
-    )
-    """
-    Logging Format
-
-    The format which will be used by the root logger
-    """
-
     class Config:
         """Configuration of the service settings"""
-    
-        env_file = 'env\\.application.env'
+
+        env_file = ".env"
         """Allow loading the values for the service settings from the specified file"""
 
 
-class AMQPSettings(pydantic.BaseSettings):
-    """Settings related to the connection to a AMQPv0-9-1 compatible message broker"""
-    
+class AMQPConfiguration(pydantic.BaseSettings):
     dsn: pydantic.AmqpDsn = pydantic.Field(
         default=...,
-        alias='AMQP_DSN',
-        title='Data Source Name',
-        description='A data source name pointing to a message broker supporting the AMQPv0-9-1 '
-                    'protocol',
-        env='AMQP_DSN'
+        title="AMQP Data Source Name",
+        description="The data source name pointing to an installation of a RabbitMQ message broker",
+        env="CONFIG_AMQP_DSN",
+        alias="CONFIG_AMQP_DSN",
     )
     """
-    Data Source Name
-    
-    A URI pointing to a message broker. The message broker needs to implement the version 0-9-1
-    of the Advanced Message Queuing Protocol.
+    AMQP Data Source Name
+
+    The data source name pointing to an installation of the RabbitMQ message broker
     """
-    
-    exchange_name: str = pydantic.Field(
+
+    exchange: typing.Optional[str] = pydantic.Field(
+        default="authorization-service",
+        title="AMQP Send Exchange",
+        description="The exchange to which this service will send messages",
+        env="CONFIG_AMQP_BIND_EXCHANGE",
+        alias="CONFIG_AMQP_BIND_EXCHANGE",
+    )
+    """
+    AMQP Send Exchange
+
+    The exchange to which this service will send the messages
+    """
+
+    class Config:
+        """Configuration of the AMQP related settings"""
+
+        env_file = ".env"
+        """The file from which the settings may be read"""
+
+
+class DatabaseConfiguration(BaseSettings):
+    """Settings related to the connections to the geo-data server"""
+
+    dsn: pydantic.PostgresDsn = Field(
         default=...,
-        alias='AMQP_EXCHANGE_NAME',
-        title='Message Broker Exchange Name',
-        description='The name of the exchange the service will bind itself to for receiving '
-                    'messages',
-        env='AMQP_EXCHANGE_NAME'
+        title="PostgreSQL Database Service Name",
+        description="A uri pointing to the mariadb containing the data for this service",
+        env="CONFIG_DB_DSN",
     )
     """
-    Exchange Name
-    
-    The name of the exchange this service will bind. The bound exchange will be used to consume
-    messages from other microservices
-    """
-    
-    exchange_type: pika.exchange_type.ExchangeType = pydantic.Field(
-        default=pika.exchange_type.ExchangeType.fanout,
-        alias='AMQP_EXCHANGE_TYPE',
-        title='Exchange Type',
-        description='The type of the specified exchange',
-        env='AMQP_EXCHANGE_TYPE'
-    )
-    """
-    Exchange Type
-    
-    The type of exchange this service will bind itself to.
-    
-    **Important:** If the exchange already exists the supplied exchange type needs to match the
-    one with which the exchange has been created.
-    
-    Available values:
-       * direct
-       * fanout (default)
-       * headers
-       * topic
+    PostgreSQL Database Service Name
+
+    An URI pointing to the installation of a PostgreSQL database which has the data required for
+    this service
     """
 
     class Config:
-        """Configuration of the service settings"""
-    
-        env_file = 'env\\.amqp.env'
-        """Allow loading the values for the service settings from the specified file"""
+        """Configuration of the AMQP related settings"""
 
-
-class DatabaseSettings(pydantic.BaseSettings):
-    """Settings for the connection to the database"""
-    
-    dsn: pydantic.stricturl(
-        tld_required=False, allowed_schemes={"mysql+pymysql", "mariadb+pymysql"}
-    ) = pydantic.Field(
-        default=None,
-        title='Database Data Source Name',
-        description='The data source name specifying the connection parameters to the database '
-                    'containing the authorization service data',
-        alias='DATABASE_DSN',
-        env='DATABASE_DSN'
-    )
-    """
-    Database Data Source Name
-    
-    The data source name specifying the connection parameters to the database containing the
-    authorization service data
-    """
-
-    class Config:
-        """Configuration of the service settings"""
-    
-        env_file = 'env\\.database.env'
-        """Allow loading the values for the service settings from the specified file"""
+        env_file = ".env"
+        """The file from which the settings may be read"""
