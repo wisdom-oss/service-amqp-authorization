@@ -30,7 +30,7 @@ class TokenValidationData(__BaseModel):
 class ScopeCheckData(__BaseModel):
     action: typing.Literal[enums.Action.CHECK_SCOPE]
 
-    scope_identifier: typing.Union[str, int] = pydantic.Field(default=...)
+    scope_identifier: typing.Union[str, int] = pydantic.Field(default=..., alias="scope")
 
 
 class ScopeUpdateData(__BaseModel):
@@ -52,7 +52,7 @@ class ScopeCreationData(__BaseModel):
     description: str = pydantic.Field(default=...)
     """The description of the scope"""
 
-    scope_string_value: str = pydantic.Field(default=...)
+    scope_string_value: str = pydantic.Field(default=..., alias="value")
     """The value by which the scope is identifiable in a scope string"""
 
 

@@ -21,6 +21,7 @@ _executor_logger = logging.getLogger("executor")
 
 def content_validator(message: bytes) -> bool:
     """Check if the content is parseable into the incoming request model"""
+    print(message.decode("utf-8"))
     try:
         request = models.requests.IncomingRequest.parse_obj({"payload": ujson.loads(message)})
     except pydantic.ValidationError as e:
