@@ -9,6 +9,7 @@ import time
 import typing
 
 import amqp_rpc_server
+import pika.exchange_type
 import pydantic.error_wrappers
 
 import server_functions
@@ -93,6 +94,8 @@ if __name__ == "__main__":
         exchange_name=_amqp_settings.exchange,
         content_validator=server_functions.content_validator,
         executor=server_functions.executor,
+        exchange_type=pika.exchange_type.ExchangeType.direct,
+        queue_name="authorization-service",
         max_reconnection_attempts=5,
     )
     # Attach the signal handler
